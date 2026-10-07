@@ -18,7 +18,7 @@
  */
 
 const CLAVE_SESION = "reservas_salones_sesion";
-const URL_BACKEND = "http://localhost:4000/api";
+const URL_BACKEND = "https://pruebasgr.onrender.com/api";
 const CLAVE_MENSAJE_SESION = "reservas_salones_mensaje_sesion";
 
 /**
