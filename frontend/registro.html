@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crear cuenta | GranReserva</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/estilos.css" />
+</head>
+<body>
+  <main class="contenedor-auth">
+    <section class="panel-salon" aria-hidden="true">
+      <div class="arcos">
+        <span class="arco arco--1"></span>
+        <span class="arco arco--2"></span>
+        <span class="arco arco--3"></span>
+        <span class="arco arco--4"></span>
+      </div>
+      <p class="panel-salon__marca">GranReserva</p>
+      <div class="panel-salon__mensaje">
+        <h1>Únete y empieza a reservar o a publicar tu salón.</h1>
+        <p>Crea tu cuenta como cliente o como anfitrión de espacios en menos de un minuto.</p>
+      </div>
+    </section>
+
+    <section class="panel-formulario">
+      <div class="tarjeta-form">
+        <p class="tarjeta-form__eyebrow">Primera vez aquí</p>
+        <h2>Crea tu cuenta</h2>
+        <p class="tarjeta-form__subtitulo">Completa tus datos para empezar.</p>
+
+        <div id="mensaje-registro" class="mensaje-estado" role="alert"></div>
+
+        <form id="form-registro" novalidate>
+          <div class="campo">
+            <label for="nombre">Nombre completo</label>
+            <input type="text" id="nombre" name="nombre" autocomplete="name" required />
+            <small id="error-nombre" class="campo__error"></small>
+          </div>
+
+          <div class="campo">
+            <label for="correo">Correo electrónico</label>
+            <input type="email" id="correo" name="correo" autocomplete="email" required />
+            <small id="error-correo" class="campo__error"></small>
+          </div>
+
+          <div class="campo">
+            <label for="contrasena">Contraseña</label>
+            <input type="password" id="contrasena" name="contrasena" autocomplete="new-password" required />
+            <small id="error-contrasena" class="campo__error"></small>
+            <small class="campo__ayuda">Mínimo 8 caracteres, con mayúscula, minúscula y número.</small>
+          </div>
+
+          <div class="campo">
+            <label for="confirmar-contrasena">Confirmar contraseña</label>
+            <input type="password" id="confirmar-contrasena" name="confirmar-contrasena" autocomplete="new-password" required />
+            <small id="error-confirmar-contrasena" class="campo__error"></small>
+          </div>
+
+          <div class="campo">
+            <label for="rol">Quiero registrarme como</label>
+            <div class="campo-radio-grupo">
+              <label>
+                <input type="radio" name="rol" value="cliente" id="rol-cliente" checked />
+                Cliente
+              </label>
+              <label>
+                <input type="radio" name="rol" value="anfitrion" id="rol-anfitrion" />
+                Anfitrión de salón
+              </label>
+            </div>
+          </div>
+
+          <div class="campo">
+            <label style="display:flex; align-items:flex-start; gap:0.5rem; font-weight:400;">
+              <input type="checkbox" id="terminos" style="width:auto; margin-top:0.2rem;" required />
+              <span>Acepto los términos de uso y la política de tratamiento de datos.</span>
+            </label>
+            <small id="error-terminos" class="campo__error"></small>
+          </div>
+
+          <button type="submit" class="boton-primario">Crear cuenta</button>
+        </form>
+
+        <p class="tarjeta-form__pie">
+          ¿Ya tienes cuenta?
+          <a href="login.html" class="enlace-secundario">Inicia sesión</a>
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/validaciones.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/registro.js"></script>
+</body>
+</html>

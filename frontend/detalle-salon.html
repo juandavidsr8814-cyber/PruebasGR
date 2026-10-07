@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Detalle del salón | GranReserva</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <link rel="stylesheet" href="css/estilos.css" />
+ 
+</head>
+<body class="pagina-detalle">
+  
+
+<div class="container">
+  <!-- ========== BREADCRUMB ========== -->
+  <nav class="breadcrumb">
+    <a href="home.html"><i class="fas fa-home"></i> Inicio</a>
+    <span> &gt; </span>
+    <a href="home.html">Salones</a>
+    <span> &gt; </span>
+    <span id="breadcrumbSalon">Salón</span>
+  </nav>
+
+  <!-- ========== GALERÍA ========== -->
+  <section class="salon-header">
+    <div class="foto-principal">
+      <i class="fas fa-images"></i> <span id="fotoSalon">Salón</span>
+    </div>
+    <div class="galeria-mini">
+      <div class="mini"></div>
+      <div class="mini"></div>
+      <div class="mini"></div>
+      <div class="mini"></div>
+    </div>
+  </section>
+
+  <!-- ========== INFORMACIÓN Y RESERVA ========== -->
+  <div class="info-grid">
+    <div class="info-detalle">
+      <h2 id="nombreSalon">Salón</h2>
+      <div class="ubicacion">
+        <i class="fas fa-map-pin"></i> <span id="ubicacionSalon">Ciudad</span>
+      </div>
+      <div class="datos">
+        <div><i class="fas fa-users"></i> Capacidad: <span id="capacidadSalon">0</span> personas</div>
+        <div><i class="fas fa-clock"></i> Alquiler mínimo: <span id="tiempoMinimo">4 horas</span></div>
+      </div>
+
+      <p class="descripcion-salon" id="descripcionSalon"></p>
+
+      <div class="extras">
+        <h3><i class="fas fa-concierge-bell"></i> Extras ofrecidos</h3>
+        <ul id="listaExtras"></ul>
+      </div>
+    </div>
+
+    <aside class="reserva-box">
+      <div class="precio" id="precioSalon">$0.00 <small>/ día</small></div>
+      <div class="capacidad"><i class="fas fa-user-friends"></i> Hasta <span id="capacidadInvitados">0</span> invitados</div>
+      <div class="disponibilidad-salon">Reserva mínima: <span id="diasMinimo">1</span> día(s)</div>
+      <button class="btn-reservar" id="btnReservarAhora">
+        <i class="fas fa-calendar-check"></i> Reservas ahora
+      </button>
+    </aside>
+  </div>
+
+  <section class="reseñas" aria-labelledby="titulo-resenas">
+    <h2 id="titulo-resenas"><i class="fas fa-star"></i> Reseñas</h2>
+    <div class="reseñas-vacias">
+      <i class="fas fa-comment-alt"></i>
+      <p>Aún no hay reseñas para este salón.</p>
+      <small>Las reseñas aparecerán después de las primeras reservas.</small>
+    </div>
+  </section>
+
+</div>
+
+<!-- ========== FOOTER ========== -->
+<footer>
+  <div class="container">
+    <ul class="footer-links">
+      <li><a href="#"><i class="fas fa-file-contract"></i> Términos y condiciones</a></li>
+      <li><a href="#"><i class="fas fa-ban"></i> Política de cancelación</a></li>
+      <li><a href="#"><i class="fas fa-envelope"></i> Contacto</a></li>
+    </ul>
+    <div class="footer-copy">
+      &copy; 2026 GranReserva  — Todos los derechos reservados.
+    </div>
+  </div>
+</footer>
+
+<!-- ========== MODAL DE RESERVA ========== -->
+<div id="modalReserva" class="modal">
+  <div class="modal-content">
+    <button class="detalle-modal-cerrar" type="button" id="cerrarModal" aria-label="Cerrar"><i class="fas fa-times"></i></button>
+    <h2><i class="fas fa-calendar-check"></i> Solicitar <span id="modalSalon">salón</span></h2>
+    <p>El anfitrión revisará tu solicitud antes de confirmar la reserva.</p>
+    <form id="formReserva" class="form-reserva">
+      <label>Fecha de reserva<input type="date" id="fechaReserva" required /></label>
+      <label>Número de invitados<input type="number" id="invitadosReserva" min="1" required /></label>
+      <label>Mensaje para el anfitrión<textarea id="mensajeReserva" rows="3" maxlength="500" placeholder="Cuéntale brevemente qué evento planeas organizar."></textarea></label>
+      <div class="reserva-feedback" id="reservaFeedback" role="status"></div>
+      <button class="btn-cerrar-modal reserva-submit" type="submit"><i class="fas fa-paper-plane"></i> Enviar solicitud</button>
+    </form>
+  </div>
+</div>
+
+<!-- ========== JAVASCRIPT ========== -->
+<script src="js/auth.js"></script>
+<script>
+  (async function() {
+    'use strict';
+
+    const esc = Auth.escaparHtml;
+    const salonId = new URLSearchParams(window.location.search).get('id');
+
+    // Usa la misma capa Auth que el resto del sitio (antes era un fetch
+    // directo con la URL del servidor escrita a mano).
+    const resultadoSalon = await Auth.obtenerSalonPorId(salonId || '');
+
+    if (!resultadoSalon.ok) {
+      document.querySelector('.info-grid').innerHTML = `<p>${esc(resultadoSalon.mensaje)}</p>`;
+      return;
+    }
+
+    const salon = resultadoSalon.salon;
+    document.title = `${salon.nombre} - Detalle`;
+    document.getElementById('breadcrumbSalon').textContent = salon.nombre;
+    document.getElementById('fotoSalon').textContent = salon.nombre;
+    document.getElementById('nombreSalon').textContent = salon.nombre;
+    document.getElementById('ubicacionSalon').textContent = salon.ubicacion;
+    document.getElementById('capacidadSalon').textContent = salon.capacidad;
+    document.getElementById('capacidadInvitados').textContent = salon.capacidad;
+    document.getElementById('precioSalon').innerHTML = `$${Number(salon.precio).toLocaleString('es-CO', { maximumFractionDigits: 0 })} <small>/ día</small>`;
+    document.getElementById('modalSalon').textContent = salon.nombre;
+    document.getElementById('descripcionSalon').textContent = salon.descripcion;
+    document.getElementById('tiempoMinimo').textContent = salon.tiempoMinimo;
+    document.getElementById('diasMinimo').textContent = salon.diasMinimo;
+
+    // ---------- Extras ofrecidos por este salón ----------
+    const iconosExtras = {
+      'Catering': 'fa-utensils',
+      'Sonido': 'fa-music',
+      'Decoración': 'fa-palette',
+      'Equipo de sonido/video': 'fa-video',
+      'Estacionamiento': 'fa-parking',
+      'Limpieza': 'fa-broom',
+      'Personalizado': 'fa-star',
+    };
+    const listaExtras = document.getElementById('listaExtras');
+    listaExtras.innerHTML = (salon.extras && salon.extras.length)
+      ? salon.extras.map((extra) => `<li><i class="fas ${iconosExtras[extra] || 'fa-check'}"></i> ${esc(extra)}</li>`).join('')
+      : '<li>Este salón no ofrece extras adicionales.</li>';
+
+    // ---------- Galería con las fotos reales del salón ----------
+    const fotoPrincipal = document.querySelector('.foto-principal');
+    const miniaturas = Array.from(document.querySelectorAll('.galeria-mini .mini'));
+    const galeria = Array.isArray(salon.fotos) ? [...salon.fotos] : [];
+
+    function ponerFoto(elemento, foto) {
+      elemento.style.backgroundImage = `url("${foto}")`;
+      elemento.style.backgroundSize = 'cover';
+      elemento.style.backgroundPosition = 'center';
+      elemento.innerHTML = '';
+    }
+
+    function pintarGaleria() {
+      ponerFoto(fotoPrincipal, galeria[0]);
+      miniaturas.forEach((mini, indice) => {
+        const foto = galeria[indice + 1];
+        if (foto) ponerFoto(mini, foto);
+      });
+    }
+
+    if (galeria.length > 0) {
+      pintarGaleria();
+      // Al hacer clic en una miniatura, esa foto pasa a ser la principal.
+      miniaturas.forEach((mini, indice) => {
+        if (!galeria[indice + 1]) return;
+        mini.addEventListener('click', () => {
+          [galeria[0], galeria[indice + 1]] = [galeria[indice + 1], galeria[0]];
+          pintarGaleria();
+        });
+      });
+    }
+
+    // ---------- Solicitud de reserva ----------
+    const usuario = Auth.obtenerUsuarioActual();
+    const fechaReserva = document.getElementById('fechaReserva');
+    const invitadosReserva = document.getElementById('invitadosReserva');
+    const manana = new Date();
+    manana.setDate(manana.getDate() + 1);
+    fechaReserva.min = manana.toLocaleDateString('en-CA'); // AAAA-MM-DD en hora local
+    invitadosReserva.max = salon.capacidad;
+
+    const btnReservar = document.getElementById('btnReservarAhora');
+    const modal = document.getElementById('modalReserva');
+    const cerrarModalBtn = document.getElementById('cerrarModal');
+
+    btnReservar.addEventListener('click', function() {
+      modal.classList.add('active');
+    });
+
+    cerrarModalBtn.addEventListener('click', function() {
+      modal.classList.remove('active');
+    });
+
+    document.getElementById('formReserva').addEventListener('submit', async function(evento) {
+      evento.preventDefault();
+      const feedback = document.getElementById('reservaFeedback');
+      if (!usuario || usuario.rol !== 'cliente') {
+        feedback.textContent = 'Inicia sesión como cliente para enviar una solicitud.';
+        feedback.className = 'reserva-feedback visible error';
+        return;
+      }
+      const boton = this.querySelector('button[type="submit"]');
+      boton.disabled = true;
+      // El cliente se identifica con su token de sesión, no con su correo.
+      const resultado = await Auth.crearReserva({
+        salonId,
+        fecha: fechaReserva.value,
+        invitados: Number(invitadosReserva.value),
+        mensaje: document.getElementById('mensajeReserva').value.trim(),
+      });
+      feedback.textContent = resultado.mensaje;
+      feedback.className = `reserva-feedback visible ${resultado.ok ? 'success' : 'error'}`;
+      if (resultado.ok) {
+        this.reset();
+        setTimeout(() => modal.classList.remove('active'), 1200);
+      } else {
+        boton.disabled = false;
+      }
+    });
+
+    // Cerrar modal haciendo clic fuera del contenido
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) {
+        modal.classList.remove('active');
+      }
+    });
+  })();
+</script>
+
+</body>
+</html>

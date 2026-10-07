@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crear publicación | GranReserva</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/estilos.css" />
+</head>
+<body class="pagina-panel">
+  <header class="panel-header">
+    <div class="panel-container panel-nav">
+      <a class="panel-logo" href="home.html"><i class="fas fa-calendar-check"></i> GranReserva</a>
+      <nav aria-label="Navegación del anfitrión">
+        <a href="panel-anfitrion.html"><i class="fas fa-chart-line"></i> Dashboard</a>
+        <a href="panel-anfitrion.html#salones"><i class="fas fa-building"></i> Mis salones</a>
+        <button type="button" class="panel-salir" id="cerrarSesion"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="panel-container publicacion-main">
+    <nav class="publicacion-breadcrumb" aria-label="Migas de pan">
+      <a href="panel-anfitrion.html">Panel de anfitrión</a><span>/</span><strong>Nueva publicación</strong>
+    </nav>
+
+    <div class="publicacion-heading">
+      <div>
+        <p class="panel-eyebrow">Interfaz de creación</p>
+        <h1 id="titulo-publicacion">Publica tu salón</h1>
+        <p id="descripcion-publicacion">Completa la información para que los clientes puedan encontrar y reservar tu espacio.</p>
+      </div>
+    </div>
+
+    <form class="publicacion-form" id="form-publicacion">
+      <section class="publicacion-section">
+        <div class="publicacion-section-title"><span class="section-number">01</span><div><h2>Datos principales del salón</h2><p>La información que verán los clientes.</p></div></div>
+        <div class="publicacion-fields">
+          <label>Nombre del salón<input type="text" id="nombre-salon" required placeholder="Ej. Salón Jardín Real" /></label>
+          <label>Descripción<textarea id="descripcion-salon" rows="4" required placeholder="Describe el espacio, su ambiente y qué lo hace especial."></textarea></label>
+          <div class="publicacion-fields two-columns">
+            <label>Capacidad máxima<input type="number" id="capacidad-salon" min="1" required placeholder="50" /></label>
+            <label>Ubicación<input type="text" id="ubicacion-salon" required placeholder="Centro, Ciudad" /></label>
+          </div>
+          <label>Precio base por día<input type="number" id="precio-salon" min="0" step="0.01" required placeholder="$ 1,200.00" /></label>
+        </div>
+      </section>
+
+      <section class="publicacion-section">
+        <div class="publicacion-section-title"><span class="section-number">02</span><div><h2>Galería de fotos</h2><p>Las imágenes ayudan a mostrar mejor tu espacio.</p></div></div>
+        <label class="upload-zone" for="fotos-salon"><i class="fas fa-cloud-upload-alt"></i><strong>Arrastra o haz clic para subir</strong><span>PNG, JPG o WEBP · Hasta 5 imágenes</span><input type="file" id="fotos-salon" accept="image/png,image/jpeg,image/webp" multiple /></label>
+        <div class="preview-grid" id="preview-grid" aria-live="polite"></div>
+      </section>
+
+      <section class="publicacion-section">
+        <div class="publicacion-section-title"><span class="section-number">03</span><div><h2>Extras ofrecidos</h2><p>Selecciona los servicios incluidos en el alquiler.</p></div></div>
+        <div class="extras-grid">
+          <label><input type="checkbox" name="extras" value="Catering" /> Servicio de catering</label>
+          <label><input type="checkbox" name="extras" value="Sonido" /> Sonido y música</label>
+          <label><input type="checkbox" name="extras" value="Decoración" /> Decoración incluida</label>
+          <label><input type="checkbox" name="extras" value="Equipo de sonido/video" /> Equipo de sonido/video</label>
+          <label><input type="checkbox" name="extras" value="Estacionamiento" /> Estacionamiento privado</label>
+          <label><input type="checkbox" name="extras" value="Limpieza" /> Servicio de limpieza</label>
+          <label><input type="checkbox" name="extras" value="Personalizado" /> Extra personalizado</label>
+        </div>
+      </section>
+
+      <section class="publicacion-section">
+        <div class="publicacion-section-title"><span class="section-number">04</span><div><h2>Configuración de disponibilidad</h2><p>Define las condiciones para recibir reservas.</p></div></div>
+        <div class="publicacion-fields two-columns">
+          <label>Días de reserva mínimo<input type="number" id="dias-minimo" value="1" min="1" required /></label>
+          <label>Tiempo mínimo de alquiler<select id="tiempo-minimo"><option value="4 horas">4 horas</option><option value="8 horas">8 horas</option><option value="1 día">1 día</option></select></label>
+        </div>
+        <div class="availability-options">
+          <label><input type="checkbox" id="pago-online" /> Permitir pagos en línea</label>
+          <label><input type="checkbox" id="presencial" checked /> Permitir pagos presenciales</label>
+        </div>
+      </section>
+
+      <div class="form-feedback" id="form-feedback" role="status"></div>
+      <div class="publicacion-actions"><a href="panel-anfitrion.html" class="panel-secondary">Cancelar</a><button class="panel-action" type="submit" id="boton-publicar"><i class="fas fa-paper-plane"></i> Publicar salón</button></div>
+    </form>
+  </main>
+
+  <script src="js/auth.js"></script>
+  <script>
+    (() => {
+      const usuario = Auth.obtenerUsuarioActual();
+      if (!usuario || usuario.rol !== 'anfitrion') {
+        window.location.replace('home.html');
+        return;
+      }
+
+      const salonId = new URLSearchParams(window.location.search).get('id');
+      const formulario = document.getElementById('form-publicacion');
+      const botonPublicar = document.getElementById('boton-publicar');
+      const feedback = document.getElementById('form-feedback');
+      const inputFotos = document.getElementById('fotos-salon');
+      const previewGrid = document.getElementById('preview-grid');
+
+      // null = el anfitrión no eligió fotos nuevas (al editar se conservan las actuales).
+      let fotosNuevas = null;
+
+      function mostrarFeedback(texto, exito) {
+        feedback.textContent = texto;
+        feedback.className = `form-feedback visible ${exito ? '' : 'form-feedback--error'}`;
+      }
+
+      function pintarVistaPrevia(fotos) {
+        previewGrid.innerHTML = '';
+        fotos.forEach((foto, indice) => {
+          const imagen = document.createElement('img');
+          imagen.alt = `Vista previa de la foto ${indice + 1}`;
+          imagen.src = foto;
+          previewGrid.appendChild(imagen);
+        });
+      }
+
+      // Reduce la imagen (máx. 1200 px de lado) y la convierte a JPEG para
+      // que el JSON enviado al backend no sea enorme.
+      function comprimirImagen(archivo, ladoMaximo = 1200, calidad = 0.75) {
+        return new Promise((resolver, rechazar) => {
+          const lector = new FileReader();
+          lector.onerror = () => rechazar(new Error('No se pudo leer la imagen.'));
+          lector.onload = () => {
+            const imagen = new Image();
+            imagen.onerror = () => rechazar(new Error('El archivo no es una imagen válida.'));
+            imagen.onload = () => {
+              const escala = Math.min(1, ladoMaximo / Math.max(imagen.width, imagen.height));
+              const lienzo = document.createElement('canvas');
+              lienzo.width = Math.round(imagen.width * escala);
+              lienzo.height = Math.round(imagen.height * escala);
+              const contexto = lienzo.getContext('2d');
+              contexto.fillStyle = '#ffffff'; // evita fondo negro en PNG con transparencia
+              contexto.fillRect(0, 0, lienzo.width, lienzo.height);
+              contexto.drawImage(imagen, 0, 0, lienzo.width, lienzo.height);
+              resolver(lienzo.toDataURL('image/jpeg', calidad));
+            };
+            imagen.src = lector.result;
+          };
+          lector.readAsDataURL(archivo);
+        });
+      }
+
+      function rellenarFormulario(salon) {
+        document.getElementById('nombre-salon').value = salon.nombre;
+        document.getElementById('descripcion-salon').value = salon.descripcion;
+        document.getElementById('capacidad-salon').value = salon.capacidad;
+        document.getElementById('ubicacion-salon').value = salon.ubicacion;
+        document.getElementById('precio-salon').value = salon.precio;
+        document.getElementById('dias-minimo').value = salon.diasMinimo;
+        document.getElementById('tiempo-minimo').value = salon.tiempoMinimo;
+        document.getElementById('pago-online').checked = salon.pagoOnline;
+        document.getElementById('presencial').checked = salon.pagoPresencial;
+        document.querySelectorAll('input[name="extras"]').forEach((extra) => {
+          extra.checked = salon.extras.includes(extra.value);
+        });
+        if (Array.isArray(salon.fotos) && salon.fotos.length) pintarVistaPrevia(salon.fotos);
+      }
+
+      if (salonId) {
+        document.getElementById('titulo-publicacion').textContent = 'Edita tu salón';
+        document.getElementById('descripcion-publicacion').textContent = 'Actualiza la información para mantener tu publicación al día.';
+        botonPublicar.innerHTML = '<i class="fas fa-save"></i> Guardar cambios';
+        // El backend identifica al anfitrión por su token, no por su correo.
+        Auth.obtenerMisSalones().then((resultado) => {
+          const salon = resultado.salones?.find((item) => String(item.id) === salonId);
+          if (salon) rellenarFormulario(salon);
+        });
+      }
+
+      document.getElementById('cerrarSesion').addEventListener('click', () => {
+        Auth.cerrarSesion();
+        window.location.replace('login.html');
+      });
+
+      inputFotos.addEventListener('change', async () => {
+        const archivos = Array.from(inputFotos.files).slice(0, 5);
+        if (archivos.length === 0) return; // se canceló la selección: no se toca nada
+        botonPublicar.disabled = true;
+        const fotos = [];
+        for (const archivo of archivos) {
+          try {
+            fotos.push(await comprimirImagen(archivo));
+          } catch (error) {
+            mostrarFeedback(`${archivo.name}: ${error.message}`, false);
+          }
+        }
+        fotosNuevas = fotos;
+        pintarVistaPrevia(fotos);
+        botonPublicar.disabled = false;
+      });
+
+      formulario.addEventListener('submit', async (evento) => {
+        evento.preventDefault();
+        const datosSalon = {
+          nombre: document.getElementById('nombre-salon').value.trim(),
+          descripcion: document.getElementById('descripcion-salon').value.trim(),
+          capacidad: Number(document.getElementById('capacidad-salon').value),
+          ubicacion: document.getElementById('ubicacion-salon').value.trim(),
+          precio: Number(document.getElementById('precio-salon').value),
+          extras: Array.from(document.querySelectorAll('input[name="extras"]:checked')).map((extra) => extra.value),
+          diasMinimo: Number(document.getElementById('dias-minimo').value),
+          tiempoMinimo: document.getElementById('tiempo-minimo').value,
+          pagoOnline: document.getElementById('pago-online').checked,
+          pagoPresencial: document.getElementById('presencial').checked,
+        };
+        if (fotosNuevas !== null) datosSalon.fotos = fotosNuevas;
+
+        botonPublicar.disabled = true;
+        const resultado = salonId
+          ? await Auth.actualizarSalon(salonId, datosSalon)
+          : await Auth.crearSalon(datosSalon);
+        mostrarFeedback(resultado.mensaje, resultado.ok);
+        if (resultado.ok) {
+          if (!salonId) evento.target.reset();
+          setTimeout(() => window.location.replace('panel-anfitrion.html'), 900);
+        } else {
+          botonPublicar.disabled = false;
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

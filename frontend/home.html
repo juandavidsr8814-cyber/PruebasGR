@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reserva de Salones</title>
+    <!-- Font Awesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/estilos.css" />
+    
+</head>
+<body class="pagina-home">
+
+    <!-- ===== HEADER ===== -->
+    <header>
+        <div class="container nav-bar">
+            <div class="logo">
+                <i class="fas fa-calendar-check"></i> GranReserva
+            </div>
+            <ul class="nav-links">
+                <li><a href="#"><i class="fas fa-compass"></i> Explorar</a></li>
+                <li><a href="#"><i class="fas fa-trophy"></i> Ranking</a></li>
+                <li id="enlace-cliente" hidden><a href="panel-cliente.html" class="btn-outline"><i class="fas fa-calendar-check"></i> Mis reservas</a></li>
+                <li id="enlace-anfitrion" hidden><a href="panel-anfitrion.html" class="btn-outline"><i class="fas fa-chart-line"></i> Panel de anfitrión</a></li>
+                <li id="enlace-login"><a href="login.html" class="btn-outline"><i class="fas fa-sign-in-alt"></i> Iniciar sesión</a></li>
+                <li id="enlace-registro"><a href="registro.html" class="btn-solid"><i class="fas fa-user-plus"></i> Registro</a></li>
+                <li id="enlace-salir" hidden><a href="#" class="btn-solid"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a></li>
+            </ul>
+        </div>
+    </header>
+
+    <!-- ===== HERO ===== -->
+    <section class="hero">
+        <div class="container">
+            <h1>Encuentra el <span>Salón</span> perfecto para tu evento</h1>
+            <p>Descubre los mejores espacios para bodas, conferencias, cumpleaños y más.</p>
+
+            <div class="search-box" id="searchBox">
+                <div class="search-group">
+                    <i class="fas fa-users"></i>
+                    <select id="capacitySelect">
+                        <option value="">Capacidad</option>
+                        <option value="10">Hasta 10</option>
+                        <option value="30">Hasta 30</option>
+                        <option value="50">Hasta 50</option>
+                        <option value="100">Hasta 100</option>
+                        <option value="200">200+</option>
+                    </select>
+                </div>
+                <div class="search-group">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <input type="text" id="locationInput" placeholder="Ubicación" />
+                </div>
+                <button class="btn-search" id="searchBtn">
+                    <i class="fas fa-search"></i> Buscar
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== SALONES DESTACADOS ===== -->
+    <section class="container">
+        <div class="section-title">
+            <i class="fas fa-star"></i> Salones Destacados
+        </div>
+        <div class="cards-grid" id="cardsGrid"></div>
+        
+    </section>
+
+    <!-- ===== FOOTER ===== -->
+    <footer>
+        <div class="container">
+            <ul class="footer-links">
+                <li><a href="#"><i class="fas fa-file-contract"></i> Términos y condiciones</a></li>
+                <li><a href="#"><i class="fas fa-ban"></i> Política de cancelación</a></li>
+                <li><a href="#"><i class="fas fa-envelope"></i> Contacto</a></li>
+            </ul>
+            <div class="footer-copy">
+                &copy; 2026 GranReserva — Todos los derechos reservados.
+            </div>
+        </div>
+    </footer>
+
+    <!-- ===== JAVASCRIPT ===== -->
+    <script src="js/auth.js"></script>
+    <script>
+        (function() {
+            'use strict';
+
+            const usuario = Auth.obtenerUsuarioActual();
+            const enlaceAnfitrion = document.getElementById('enlace-anfitrion');
+            const enlaceCliente = document.getElementById('enlace-cliente');
+            const enlaceLogin = document.getElementById('enlace-login');
+            const enlaceRegistro = document.getElementById('enlace-registro');
+            const enlaceSalir = document.getElementById('enlace-salir');
+
+            if (usuario) {
+                enlaceLogin.hidden = true;
+                enlaceRegistro.hidden = true;
+                enlaceSalir.hidden = false;
+                if (usuario.rol === 'anfitrion') enlaceAnfitrion.hidden = false;
+                if (usuario.rol === 'cliente') enlaceCliente.hidden = false;
+                enlaceSalir.querySelector('a').addEventListener('click', (evento) => {
+                    evento.preventDefault();
+                    Auth.cerrarSesion();
+                    window.location.reload();
+                });
+            }
+
+            function mensajeCargaSalones(texto, conReintentar) {
+                const grid = document.getElementById('cardsGrid');
+                grid.innerHTML = `<p class="cards-mensaje"><i class="fas fa-exclamation-circle"></i> ${Auth.escaparHtml(texto)}</p>`;
+                if (conReintentar) {
+                    const boton = document.createElement('button');
+                    boton.type = 'button';
+                    boton.className = 'btn-outline cards-reintentar';
+                    boton.innerHTML = '<i class="fas fa-rotate-right"></i> Reintentar';
+                    boton.addEventListener('click', cargarSalonesPublicados);
+                    grid.appendChild(boton);
+                }
+            }
+
+            async function cargarSalonesPublicados() {
+                const grid = document.getElementById('cardsGrid');
+                grid.innerHTML = '<p class="cards-mensaje"><i class="fas fa-spinner fa-spin"></i> Cargando salones...</p>';
+                const resultado = await Auth.obtenerSalones();
+                if (!resultado.ok) {
+                    if (resultado.tipo === 'sesion') return; // auth.js ya está redirigiendo al login
+                    mensajeCargaSalones(resultado.mensaje || 'No fue posible cargar los salones.', true);
+                    return;
+                }
+                if (!Array.isArray(resultado.salones) || resultado.salones.length === 0) {
+                    mensajeCargaSalones('Todavía no hay salones publicados.', false);
+                    return;
+                }
+
+                grid.innerHTML = resultado.salones.map((salon) => `
+                    <div class="card" data-salon-id="${salon.id}" data-capacity="${salon.capacidad}" data-location="${Auth.escaparHtml(salon.ubicacion.toLowerCase())}">
+                        <div class="card-img"><i class="fas fa-building"></i></div>
+                        <div class="card-content">
+                            <h3>${Auth.escaparHtml(salon.nombre)}</h3>
+                            <div class="location"><i class="fas fa-map-pin"></i> ${Auth.escaparHtml(salon.ubicacion)}</div>
+                            <span class="capacity"><i class="fas fa-user-friends"></i> Hasta ${salon.capacidad}</span>
+                            <span class="price">$${Number(salon.precio).toLocaleString('es-CO', { maximumFractionDigits: 0 })} <small>/ día</small></span>
+                            <br />
+                            <button class="btn-reserve" data-salon-id="${salon.id}">Ver detalle</button>
+                        </div>
+                    </div>
+                `).join('');
+
+                grid.querySelectorAll('.card').forEach((card) => {
+                    card.addEventListener('click', (evento) => {
+                        if (evento.target.closest('.btn-reserve')) return;
+                        window.location.href = `detalle-salon.html?id=${encodeURIComponent(card.dataset.salonId)}`;
+                    });
+                    card.querySelector('.btn-reserve').addEventListener('click', () => {
+                        window.location.href = `detalle-salon.html?id=${encodeURIComponent(card.dataset.salonId)}`;
+                    });
+                });
+            }
+
+            cargarSalonesPublicados();
+
+            // Elementos del DOM
+            const searchBtn = document.getElementById('searchBtn');
+            const capacitySelect = document.getElementById('capacitySelect');
+            const locationInput = document.getElementById('locationInput');
+
+            // ----- Función de filtrado -----
+            function filterSalones() {
+                const capacityValue = capacitySelect.value;
+                const locationValue = locationInput.value.trim().toLowerCase();
+                const cards = document.querySelectorAll('#cardsGrid .card');
+
+                cards.forEach(card => {
+                    const cardCapacity = card.getAttribute('data-capacity');
+                    const cardLocation = card.getAttribute('data-location').toLowerCase();
+
+                    let show = true;
+
+                    // Filtro por capacidad (si se seleccionó algo)
+                    if (capacityValue !== '') {
+                        const selectedNum = parseInt(capacityValue, 10);
+                        const cardNum = parseInt(cardCapacity, 10);
+
+                        if (selectedNum >= 200) {
+                            // Opción "200+": mostramos salones con capacidad igual o mayor a 200
+                            if (cardNum < 200) {
+                                show = false;
+                            }
+                        } else {
+                            // Opción "Hasta X": mostramos salones con capacidad igual o menor a X
+                            if (cardNum > selectedNum) {
+                                show = false;
+                            }
+                        }
+                    }
+
+                    // Filtro por ubicación (si se escribió algo)
+                    if (locationValue !== '') {
+                        if (!cardLocation.includes(locationValue)) {
+                            show = false;
+                        }
+                    }
+
+                    card.style.display = show ? 'block' : 'none';
+                });
+
+                // Mostrar mensaje si no hay resultados
+                const visibleCards = Array.from(cards).filter(card => card.style.display !== 'none');
+                let msg = document.getElementById('noResultsMsg');
+                if (visibleCards.length === 0) {
+                    if (!msg) {
+                        msg = document.createElement('p');
+                        msg.id = 'noResultsMsg';
+                        msg.style.textAlign = 'center';
+                        msg.style.padding = '40px 0';
+                        msg.style.fontSize = '1.1rem';
+                        msg.style.color = '#64748b';
+                        msg.innerHTML = '<i class="fas fa-exclamation-circle"></i> No se encontraron salones con esos filtros.';
+                        document.getElementById('cardsGrid').parentNode.appendChild(msg);
+                    }
+                } else {
+                    if (msg) msg.remove();
+                }
+            }
+
+            // ----- Evento de búsqueda -----
+            searchBtn.addEventListener('click', filterSalones);
+            capacitySelect.addEventListener('change', filterSalones);
+            locationInput.addEventListener('input', filterSalones);
+
+            // Permitir búsqueda con Enter en los campos
+            capacitySelect.addEventListener('keydown', (e) => { if (e.key === 'Enter') filterSalones(); });
+            locationInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') filterSalones(); });
+
+        })();
+    </script>
+
+</body>
+</html>

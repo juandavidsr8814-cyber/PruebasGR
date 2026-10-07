@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panel de anfitrión | GranReserva</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/estilos.css" />
+</head>
+<body class="pagina-panel">
+  <header class="panel-header">
+    <div class="panel-container panel-nav">
+      <a class="panel-logo" href="home.html"><i class="fas fa-calendar-check"></i> GranReserva</a>
+      <nav aria-label="Navegación del anfitrión">
+        <a href="home.html"><i class="fas fa-home"></i> Inicio</a>
+        <a href="#salones"><i class="fas fa-building"></i> Mis salones</a>
+        <a href="#solicitudes"><i class="fas fa-inbox"></i> Solicitudes <span id="badgeSolicitudes" class="nav-badge" hidden>0</span></a>
+        <button type="button" class="panel-salir" id="cerrarSesion"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="panel-container panel-main">
+    <div class="panel-heading">
+      <div>
+        <p class="panel-eyebrow">Interfaz de dueños</p>
+        <h1>Dashboard / Resultados</h1>
+        <p>Resumen de la actividad de tus salones, <strong id="nombreAnfitrion">anfitrión</strong>.</p>
+      </div>
+      <a class="panel-action" href="crear-salon.html"><i class="fas fa-plus"></i> Nuevo salón</a>
+    </div>
+
+    <section class="panel-stats" aria-label="Resumen de actividad">
+      <article><span>Reservas hoy</span><strong id="reservasHoy">0</strong><small>Aceptadas para hoy</small></article>
+      <article><span>Solicitudes nuevas</span><strong id="solicitudesNuevas">0</strong><small>Pendientes de respuesta</small></article>
+      <article><span>Salones publicados</span><strong id="salonesPublicados">0</strong><small>Publicaciones activas</small></article>
+    </section>
+
+    <div class="panel-grid">
+      <section class="panel-section panel-chart" id="salones">
+        <div class="panel-section-title"><h2>Mis salones</h2><span id="estadoSalones">Cargando...</span></div>
+        <div id="listaSalones" class="panel-lista-salones"></div>
+      </section>
+
+      <section class="panel-section" id="solicitudes">
+        <div class="panel-section-title"><h2>Solicitudes recientes</h2><span id="estadoSolicitudes">Cargando...</span></div>
+        <div id="listaSolicitudes" class="panel-lista-solicitudes"></div>
+      </section>
+
+      <section class="panel-section panel-reviews">
+        <div class="panel-section-title"><h2>Reseñas de mis salones <span class="badge-proximamente">Próximamente</span></h2><span>Sin calificación</span></div>
+        <div class="panel-empty"><i class="fas fa-comment-alt"></i><p>Esta función aún no está disponible.</p><small>Podrás ver aquí las reseñas de tus clientes en una futura versión.</small></div>
+      </section>
+
+      <section class="panel-section panel-history">
+        <div class="panel-section-title"><h2>Historial de clientes <span class="badge-proximamente">Próximamente</span></h2></div>
+        <div class="panel-empty"><i class="fas fa-users"></i><p>Esta función aún no está disponible.</p><small>Podrás ver aquí tu historial de clientes en una futura versión.</small></div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Modal de confirmación genérico (reemplaza los window.confirm/alert nativos) -->
+  <div class="contacto-modal" id="confirmarModal" hidden>
+    <div class="contacto-backdrop" data-cerrar-confirmar></div>
+    <section class="contacto-dialog" role="dialog" aria-modal="true" aria-labelledby="confirmarTitulo">
+      <button class="contacto-cerrar" type="button" aria-label="Cerrar" data-cerrar-confirmar><i class="fas fa-times"></i></button>
+      <p class="panel-eyebrow">Confirmar acción</p>
+      <h2 id="confirmarTitulo">¿Eliminar salón?</h2>
+      <p id="confirmarMensaje" class="contacto-subtitulo"></p>
+      <div class="confirmar-acciones">
+        <button type="button" class="panel-secondary" data-cerrar-confirmar>Cancelar</button>
+        <button type="button" class="panel-danger panel-danger--solido" id="confirmarAceptar"><i class="fas fa-trash"></i> Eliminar</button>
+      </div>
+    </section>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script>
+    const usuario = Auth.obtenerUsuarioActual();
+    if (!usuario || usuario.rol !== 'anfitrion') {
+      window.location.replace('home.html');
+    } else {
+      const esc = Auth.escaparHtml;
+      document.getElementById('nombreAnfitrion').textContent = usuario.nombre;
+      const listaSalones = document.getElementById('listaSalones');
+      const estadoSalones = document.getElementById('estadoSalones');
+      const listaSolicitudes = document.getElementById('listaSolicitudes');
+      const estadoSolicitudes = document.getElementById('estadoSolicitudes');
+      const badgeSolicitudes = document.getElementById('badgeSolicitudes');
+
+      // ---------- Modal de confirmación (reutilizable) ----------
+      const confirmarModal = document.getElementById('confirmarModal');
+      const confirmarMensaje = document.getElementById('confirmarMensaje');
+      const confirmarAceptar = document.getElementById('confirmarAceptar');
+      let resolverConfirmacion = null;
+
+      function pedirConfirmacion(mensaje) {
+        confirmarMensaje.textContent = mensaje;
+        confirmarModal.hidden = false;
+        document.body.classList.add('modal-abierto');
+        confirmarAceptar.focus();
+        return new Promise((resolver) => { resolverConfirmacion = resolver; });
+      }
+
+      function cerrarConfirmacion(resultado) {
+        confirmarModal.hidden = true;
+        document.body.classList.remove('modal-abierto');
+        if (resolverConfirmacion) { resolverConfirmacion(resultado); resolverConfirmacion = null; }
+      }
+
+      confirmarModal.querySelectorAll('[data-cerrar-confirmar]').forEach((el) => el.addEventListener('click', () => cerrarConfirmacion(false)));
+      confirmarAceptar.addEventListener('click', () => cerrarConfirmacion(true));
+      document.addEventListener('keydown', (evento) => { if (evento.key === 'Escape' && !confirmarModal.hidden) cerrarConfirmacion(false); });
+
+      // ---------- Bloque de error reutilizable (con reintentar cuando aplica) ----------
+      // "tipo: red" (auth.js) es un problema de conexión: tiene sentido reintentar.
+      // Sin "tipo", el mensaje ya viene claro desde el servidor (permisos, etc.).
+      function bloqueError(resultado, idReintentar) {
+        const esRed = resultado.tipo === 'red';
+        return `<div class="panel-empty panel-empty--error">
+          <i class="fas ${esRed ? 'fa-plug-circle-xmark' : 'fa-triangle-exclamation'}"></i>
+          <p>${esc(resultado.mensaje || 'No fue posible completar la solicitud.')}</p>
+          <button type="button" class="panel-secondary" data-reintentar="${idReintentar}"><i class="fas fa-rotate-right"></i> Reintentar</button>
+        </div>`;
+      }
+
+      // ---------- Mis salones ----------
+      function mostrarSalones(salones) {
+        document.getElementById('salonesPublicados').textContent = salones.filter((salon) => salon.estado === 'publicado').length;
+        estadoSalones.textContent = `${salones.length} publicación${salones.length === 1 ? '' : 'es'}`;
+        if (salones.length === 0) {
+          listaSalones.innerHTML = '<div class="panel-empty"><i class="fas fa-building"></i><p>Aún no tienes salones publicados.</p><small>Crea tu primera publicación para comenzar.</small></div>';
+          return;
+        }
+        listaSalones.innerHTML = salones.map((salon) => `
+          <article class="salon-admin-item">
+            <div><strong>${esc(salon.nombre)}</strong><small>${esc(salon.ubicacion)} · Capacidad ${esc(salon.capacidad)} · $${Number(salon.precio).toLocaleString('es-CO', { maximumFractionDigits: 0 })}</small><span class="salon-admin-estado">${esc(salon.estado)}</span></div>
+            <div class="salon-admin-actions"><a class="panel-secondary" href="crear-salon.html?id=${encodeURIComponent(salon.id)}"><i class="fas fa-edit"></i> Editar</a><button class="panel-danger" type="button" data-eliminar="${esc(salon.id)}" data-nombre="${esc(salon.nombre)}"><i class="fas fa-trash"></i> Eliminar</button></div>
+          </article>
+        `).join('');
+
+        listaSalones.querySelectorAll('[data-eliminar]').forEach((boton) => {
+          boton.addEventListener('click', async () => {
+            const confirmado = await pedirConfirmacion(`¿Eliminar "${boton.dataset.nombre}"? Esta acción no se puede deshacer.`);
+            if (!confirmado) return;
+            boton.disabled = true;
+            const resultado = await Auth.eliminarSalon(boton.dataset.eliminar);
+            if (!resultado.ok) {
+              if (resultado.tipo !== 'sesion') window.alert(resultado.mensaje);
+              boton.disabled = false;
+              return;
+            }
+            cargarMisSalones();
+          });
+        });
+      }
+
+      async function cargarMisSalones() {
+        estadoSalones.textContent = 'Cargando...';
+        const resultado = await Auth.obtenerMisSalones();
+        if (!resultado.ok || !Array.isArray(resultado.salones)) {
+          if (resultado.tipo === 'sesion') return; // auth.js ya está redirigiendo al login
+          estadoSalones.textContent = 'No disponible';
+          listaSalones.innerHTML = bloqueError(resultado, 'salones');
+          return;
+        }
+        mostrarSalones(resultado.salones);
+      }
+
+      // ---------- Solicitudes de reserva ----------
+      // Las fechas se guardan a medianoche UTC, por eso se muestran en UTC
+      // para que el día no se corra hacia atrás en zonas horarias de América.
+      function formatearFecha(fecha) {
+        return new Date(fecha).toLocaleDateString('es-CO', { dateStyle: 'long', timeZone: 'UTC' });
+      }
+
+      function mostrarSolicitudes(reservas) {
+        const hoy = new Date().toLocaleDateString('en-CA'); // AAAA-MM-DD en hora local
+        const pendientes = reservas.filter((reserva) => reserva.estado === 'pendiente').length;
+        const aceptadasHoy = reservas.filter((reserva) => reserva.estado === 'aceptada' && new Date(reserva.fecha).toISOString().slice(0, 10) === hoy).length;
+        document.getElementById('solicitudesNuevas').textContent = pendientes;
+        document.getElementById('reservasHoy').textContent = aceptadasHoy;
+        estadoSolicitudes.textContent = `${reservas.length} solicitud${reservas.length === 1 ? '' : 'es'}`;
+        badgeSolicitudes.hidden = pendientes === 0;
+        badgeSolicitudes.textContent = pendientes;
+
+        if (reservas.length === 0) {
+          listaSolicitudes.innerHTML = '<div class="panel-empty"><i class="fas fa-inbox"></i><p>No hay solicitudes todavía.</p><small>Aquí aparecerán las solicitudes de los clientes.</small></div>';
+          return;
+        }
+
+        listaSolicitudes.innerHTML = reservas.map((reserva) => `
+          <article class="solicitud-item">
+            <div class="solicitud-item-heading">
+              <div><strong>${esc(reserva.nombreSalon || 'Salón')}</strong><small>${esc(reserva.nombreCliente || 'Cliente')}${reserva.correoCliente ? ' · ' + esc(reserva.correoCliente) : ''}</small></div>
+              <span class="solicitud-estado solicitud-estado--${esc(reserva.estado)}">${esc(reserva.estado)}</span>
+            </div>
+            <div class="solicitud-details">
+              <span><i class="fas fa-calendar-day"></i> ${formatearFecha(reserva.fecha)}</span>
+              <span><i class="fas fa-users"></i> ${esc(reserva.invitados)} invitados</span>
+            </div>
+            ${reserva.mensaje ? `<p class="solicitud-mensaje">${esc(reserva.mensaje)}</p>` : ''}
+            ${reserva.estado === 'pendiente' ? `
+              <div class="solicitud-actions">
+                <button class="panel-action" type="button" data-responder="${esc(reserva.id)}" data-estado="aceptada"><i class="fas fa-check"></i> Aceptar</button>
+                <button class="panel-danger" type="button" data-responder="${esc(reserva.id)}" data-estado="rechazada"><i class="fas fa-times"></i> Rechazar</button>
+              </div>` : ''}
+          </article>
+        `).join('');
+      }
+
+      async function cargarSolicitudes() {
+        estadoSolicitudes.textContent = 'Cargando...';
+        const resultado = await Auth.listarReservasAnfitrion();
+        if (!resultado.ok || !Array.isArray(resultado.reservas)) {
+          if (resultado.tipo === 'sesion') return;
+          estadoSolicitudes.textContent = 'No disponible';
+          listaSolicitudes.innerHTML = bloqueError(resultado, 'solicitudes');
+          return;
+        }
+        mostrarSolicitudes(resultado.reservas);
+      }
+
+      listaSolicitudes.addEventListener('click', async (evento) => {
+        const reintentar = evento.target.closest('[data-reintentar="solicitudes"]');
+        if (reintentar) { cargarSolicitudes(); return; }
+        const boton = evento.target.closest('[data-responder]');
+        if (!boton) return;
+        const verbo = boton.dataset.estado === 'aceptada' ? 'aceptar' : 'rechazar';
+        const confirmado = await pedirConfirmacion(`¿Seguro que quieres ${verbo} esta solicitud?`);
+        if (!confirmado) return;
+        boton.disabled = true;
+        const resultado = await Auth.actualizarEstadoReserva(boton.dataset.responder, boton.dataset.estado);
+        if (!resultado.ok) {
+          if (resultado.tipo !== 'sesion') window.alert(resultado.mensaje);
+          boton.disabled = false;
+          return;
+        }
+        cargarSolicitudes();
+      });
+
+      listaSalones.addEventListener('click', (evento) => {
+        if (evento.target.closest('[data-reintentar="salones"]')) cargarMisSalones();
+      });
+
+      cargarMisSalones();
+      cargarSolicitudes();
+      document.getElementById('cerrarSesion').addEventListener('click', () => {
+        Auth.cerrarSesion();
+        window.location.replace('login.html');
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mis reservas | GranReserva</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/estilos.css" />
+</head>
+<body class="pagina-panel">
+  <header class="panel-header">
+    <div class="panel-container panel-nav">
+      <a class="panel-logo" href="home.html"><i class="fas fa-calendar-check"></i> GranReserva</a>
+      <nav aria-label="Navegación del cliente">
+        <a href="home.html"><i class="fas fa-compass"></i> Explorar salones</a>
+        <button type="button" class="panel-salir panel-mensajes-link" id="abrirMensajes"><i class="fas fa-comments"></i> Mensajes</button>
+        <button type="button" class="panel-salir" id="cerrarSesion"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="panel-container panel-main panel-cliente-main">
+    <div class="panel-heading">
+      <div>
+        <p class="panel-eyebrow">Área del cliente</p>
+        <h1>Mis reservas</h1>
+        <p>Consulta el estado de tus solicitudes, <strong id="nombreCliente">cliente</strong>.</p>
+      </div>
+      <a class="panel-action" href="home.html"><i class="fas fa-search"></i> Buscar salones</a>
+    </div>
+
+    <section class="panel-stats panel-client-stats" aria-label="Resumen de reservas">
+      <article><span>Total de solicitudes</span><strong id="totalReservas">0</strong><small>Enviadas por ti</small></article>
+      <article><span>Pendientes</span><strong id="reservasPendientes">0</strong><small>Esperando respuesta</small></article>
+      <article><span>Aceptadas</span><strong id="reservasAceptadas">0</strong><small>Reservas confirmadas</small></article>
+    </section>
+
+    <section class="panel-section cliente-reservas-section">
+      <div class="panel-section-title"><h2>Estado de mis solicitudes</h2><span id="estadoReservas">Cargando...</span></div>
+      <div id="listaReservasCliente" class="panel-lista-reservas"><div class="panel-empty"><i class="fas fa-spinner fa-spin"></i><p>Cargando solicitudes...</p></div></div>
+    </section>
+  </main>
+
+  <div class="contacto-modal" id="mensajesModal" hidden>
+    <div class="contacto-backdrop" data-cerrar-mensajes></div>
+    <section class="contacto-dialog mensajes-dialog" role="dialog" aria-modal="true" aria-labelledby="mensajesTitulo">
+      <button class="contacto-cerrar" type="button" aria-label="Cerrar" data-cerrar-mensajes><i class="fas fa-times"></i></button>
+      <p class="panel-eyebrow">Centro de comunicación</p>
+      <h2 id="mensajesTitulo">Mensajes</h2>
+      <p class="contacto-subtitulo">Respuestas de los anfitriones y conversaciones de tus reservas.</p>
+      <div class="cliente-mensajes-toolbar"><span id="contadorMensajesCliente"><i class="fas fa-comments"></i> 0 conversaciones</span><small>Las solicitudes permanecen en Mis reservas</small></div>
+      <div id="listaMensajesCliente" class="lista-mensajes-cliente"></div>
+    </section>
+  </div>
+
+  <div class="contacto-modal" id="contactoModal" hidden>
+    <div class="contacto-backdrop" data-cerrar-contacto></div>
+    <section class="contacto-dialog" role="dialog" aria-modal="true" aria-labelledby="contactoTitulo">
+      <button class="contacto-cerrar" type="button" aria-label="Cerrar" data-cerrar-contacto><i class="fas fa-times"></i></button>
+      <p class="panel-eyebrow">Conversación de la solicitud</p>
+      <h2 id="contactoTitulo">Contactar anfitrión</h2>
+      <p id="contactoSalon" class="contacto-subtitulo"></p>
+      <form id="formContacto">
+        <label>Mensaje<textarea id="mensajeContacto" rows="4" maxlength="500" required placeholder="Escribe una pregunta o comentario para el anfitrión."></textarea></label>
+        <div class="contacto-feedback" id="contactoFeedback" role="status"></div>
+        <button class="panel-action contacto-enviar" type="submit"><i class="fas fa-paper-plane"></i> Enviar mensaje</button>
+      </form>
+    </section>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script>
+    (() => {
+      const usuario = Auth.obtenerUsuarioActual();
+      if (!usuario || usuario.rol !== 'cliente') {
+        window.location.replace('home.html');
+        return;
+      }
+
+      const lista = document.getElementById('listaReservasCliente');
+      const contactoModal = document.getElementById('contactoModal');
+      const formContacto = document.getElementById('formContacto');
+      const mensajesModal = document.getElementById('mensajesModal');
+      const listaMensajes = document.getElementById('listaMensajesCliente');
+      let reservaContactoId = null;
+      let reservasActuales = [];
+      let conversacionSeleccionada = null;
+      document.getElementById('nombreCliente').textContent = usuario.nombre;
+
+      const esc = Auth.escaparHtml;
+
+      function textoEstado(estado) {
+        return { pendiente: 'Pendiente', aceptada: 'Aceptada', rechazada: 'Rechazada' }[estado] || estado;
+      }
+
+      function mostrarReservas(reservas) {
+        reservasActuales = reservas;
+        const pendientes = reservas.filter((reserva) => reserva.estado === 'pendiente').length;
+        const aceptadas = reservas.filter((reserva) => reserva.estado === 'aceptada').length;
+        document.getElementById('totalReservas').textContent = reservas.length;
+        document.getElementById('reservasPendientes').textContent = pendientes;
+        document.getElementById('reservasAceptadas').textContent = aceptadas;
+        document.getElementById('estadoReservas').textContent = `${reservas.length} solicitud${reservas.length === 1 ? '' : 'es'}`;
+
+        if (!reservas.length) {
+          lista.innerHTML = '<div class="panel-empty cliente-empty"><i class="fas fa-calendar-plus"></i><p>Aún no has solicitado ninguna reserva.</p><small>Explora los salones disponibles y envía tu primera solicitud.</small><a class="panel-action" href="home.html"><i class="fas fa-search"></i> Explorar salones</a></div>';
+          return;
+        }
+
+        lista.innerHTML = reservas.map((reserva) => `
+          <article class="cliente-reserva-item">
+            <div class="cliente-reserva-icon"><i class="fas fa-building"></i></div>
+            <div class="cliente-reserva-info">
+              <strong>${esc(reserva.nombreSalon || 'Salón')}</strong>
+              <span><i class="fas fa-calendar-day"></i> ${new Date(reserva.fecha).toLocaleDateString('es-CO', { dateStyle: 'long', timeZone: 'UTC' })}</span>
+              <span><i class="fas fa-users"></i> ${reserva.invitados} invitados</span>
+              <small><i class="fas fa-map-marker-alt"></i> ${esc(reserva.ubicacionSalon || 'Ubicación no disponible')}</small>
+            </div>
+            <div class="cliente-reserva-status"><span class="request-status ${reserva.estado}">${textoEstado(reserva.estado)}</span><small>${reserva.estado === 'pendiente' ? 'El anfitrión la revisará pronto' : reserva.estado === 'aceptada' ? 'Tu reserva está confirmada' : 'El anfitrión no pudo aceptar esta solicitud'}</small><button class="contacto-anfitrion-btn" type="button" data-contactar="${reserva.id}"><i class="fas fa-comment-alt"></i> Contactar anfitrión</button></div>
+          </article>
+        `).join('');
+      }
+
+      function abrirMensajes() {
+        mostrarListaConversacionesCliente();
+        mensajesModal.hidden = false;
+        document.body.classList.add('modal-abierto');
+        mensajesModal.querySelector('[data-cerrar-mensajes]').focus();
+      }
+
+      function mostrarListaConversacionesCliente() {
+        conversacionSeleccionada = null;
+        const conversaciones = reservasActuales.filter((reserva) => reserva.mensajes?.length);
+        document.getElementById('contadorMensajesCliente').innerHTML = `<i class="fas fa-comments"></i> ${conversaciones.length} conversación${conversaciones.length === 1 ? '' : 'es'}`;
+        listaMensajes.innerHTML = conversaciones.length ? conversaciones.map((reserva) => {
+          const ultimoMensaje = reserva.mensajes[reserva.mensajes.length - 1];
+          return `<button class="conversacion-item" type="button" data-seleccionar-conversacion-cliente="${reserva.id}"><span class="conversacion-avatar"><i class="fas fa-building"></i></span><span class="conversacion-resumen"><strong>${esc(reserva.nombreSalon || 'Salón')}</strong><small>${new Date(reserva.fecha).toLocaleDateString('es-CO', { timeZone: 'UTC' })}</small><span>${esc(ultimoMensaje?.texto || 'Sin mensajes')}</span></span><span class="conversacion-meta"><b>${reserva.mensajes.length}</b><i class="fas fa-chevron-right"></i></span></button>`;
+        }).join('') : '<div class="panel-empty modal-empty"><i class="fas fa-comments"></i><p>Aún no tienes mensajes.</p><small>Las respuestas de los anfitriones aparecerán aquí.</small></div>';
+      }
+
+      function mostrarConversacionCliente(id) {
+        const reserva = reservasActuales.find((item) => item.id === id);
+        if (!reserva) return;
+        conversacionSeleccionada = id;
+        listaMensajes.innerHTML = `<button class="conversacion-volver" type="button" data-volver-conversaciones-cliente><i class="fas fa-arrow-left"></i> Todas las conversaciones</button><article class="cliente-conversacion mensaje-conversacion-activa"><div class="cliente-conversacion-header"><div><strong>${esc(reserva.nombreSalon || 'Salón')}</strong><span>${new Date(reserva.fecha).toLocaleDateString('es-CO', { dateStyle: 'long', timeZone: 'UTC' })}</span></div><span class="request-status ${reserva.estado}">${textoEstado(reserva.estado)}</span></div><div class="cliente-mensajes-historial">${reserva.mensajes.map((mensaje) => `<p class="mensaje-burbuja ${String(mensaje.autor) === String(usuario.id) ? 'mensaje-propio' : ''}"><strong>${esc(mensaje.nombreAutor || (String(mensaje.autor) === String(usuario.id) ? 'Tú' : 'Anfitrión'))}:</strong> ${esc(mensaje.texto)}<small>${new Date(mensaje.creadoEn).toLocaleString('es-CO')}</small></p>`).join('')}</div><form class="mensaje-respuesta" data-responder-reserva-cliente="${reserva.id}"><input type="text" maxlength="500" required placeholder="Escribe una respuesta..."><button type="submit" aria-label="Enviar respuesta"><i class="fas fa-paper-plane"></i></button></form></article>`;
+      }
+
+      // Bloque de error reutilizable: distingue un problema de conexión
+      // (tiene sentido reintentar) de un mensaje de negocio ya claro.
+      function bloqueError(resultado) {
+        const esRed = resultado.tipo === 'red';
+        return `<div class="panel-empty panel-empty--error">
+          <i class="fas ${esRed ? 'fa-plug-circle-xmark' : 'fa-triangle-exclamation'}"></i>
+          <p>${Auth.escaparHtml(resultado.mensaje || 'No fue posible cargar tus solicitudes.')}</p>
+          <button type="button" class="panel-secondary" id="reintentarReservas"><i class="fas fa-rotate-right"></i> Reintentar</button>
+        </div>`;
+      }
+
+      async function cargarReservas() {
+        document.getElementById('estadoReservas').textContent = 'Cargando...';
+        const resultado = await Auth.listarReservasCliente();
+        if (!resultado.ok || !Array.isArray(resultado.reservas)) {
+          if (resultado.tipo === 'sesion') return; // auth.js ya está redirigiendo al login
+          document.getElementById('estadoReservas').textContent = 'No disponible';
+          lista.innerHTML = bloqueError(resultado);
+          document.getElementById('reintentarReservas')?.addEventListener('click', cargarReservas);
+          return;
+        }
+        mostrarReservas(resultado.reservas);
+      }
+
+      lista.addEventListener('click', (evento) => {
+        const boton = evento.target.closest('[data-contactar]');
+        if (!boton) return;
+        reservaContactoId = boton.dataset.contactar;
+        const reserva = reservasActuales.find((item) => item.id === reservaContactoId);
+        document.getElementById('contactoSalon').textContent = reserva?.nombreSalon || 'Solicitud de reserva';
+        document.getElementById('mensajeContacto').value = '';
+        document.getElementById('contactoFeedback').className = 'contacto-feedback';
+        contactoModal.hidden = false;
+        document.getElementById('mensajeContacto').focus();
+      });
+
+      document.getElementById('abrirMensajes').addEventListener('click', abrirMensajes);
+      mensajesModal.querySelectorAll('[data-cerrar-mensajes]').forEach((elemento) => elemento.addEventListener('click', () => { mensajesModal.hidden = true; document.body.classList.remove('modal-abierto'); }));
+      mensajesModal.addEventListener('submit', async (evento) => {
+        const formulario = evento.target.closest('[data-responder-reserva-cliente]');
+        if (!formulario) return;
+        evento.preventDefault();
+        const boton = formulario.querySelector('button');
+        const entrada = formulario.querySelector('input');
+        boton.disabled = true;
+        const resultado = await Auth.agregarMensajeReserva(formulario.dataset.responderReservaCliente, entrada.value);
+        if (resultado.ok) {
+          reservasActuales = reservasActuales.map((reserva) => reserva.id === formulario.dataset.responderReservaCliente ? resultado.reserva : reserva);
+          mostrarConversacionCliente(formulario.dataset.responderReservaCliente);
+        } else {
+          if (resultado.tipo !== 'sesion') window.alert(resultado.mensaje);
+          boton.disabled = false;
+        }
+      });
+      mensajesModal.addEventListener('click', (evento) => {
+        const conversacion = evento.target.closest('[data-seleccionar-conversacion-cliente]');
+        if (conversacion) mostrarConversacionCliente(conversacion.dataset.seleccionarConversacionCliente);
+        if (evento.target.closest('[data-volver-conversaciones-cliente]')) mostrarListaConversacionesCliente();
+      });
+
+      function cerrarContacto() { contactoModal.hidden = true; }
+      contactoModal.querySelectorAll('[data-cerrar-contacto]').forEach((elemento) => elemento.addEventListener('click', cerrarContacto));
+      formContacto.addEventListener('submit', async (evento) => {
+        evento.preventDefault();
+        const boton = formContacto.querySelector('button[type="submit"]');
+        const feedback = document.getElementById('contactoFeedback');
+        boton.disabled = true;
+        const resultado = await Auth.agregarMensajeReserva(reservaContactoId, document.getElementById('mensajeContacto').value);
+        feedback.textContent = resultado.mensaje;
+        feedback.className = `contacto-feedback visible ${resultado.ok ? 'success' : 'error'}`;
+        boton.disabled = !resultado.ok;
+        if (resultado.ok) setTimeout(cerrarContacto, 900);
+      });
+      document.addEventListener('keydown', (evento) => { if (evento.key === 'Escape' && !contactoModal.hidden) cerrarContacto(); if (evento.key === 'Escape' && !mensajesModal.hidden) { mensajesModal.hidden = true; document.body.classList.remove('modal-abierto'); } });
+
+      document.getElementById('cerrarSesion').addEventListener('click', () => {
+        Auth.cerrarSesion();
+        window.location.replace('login.html');
+      });
+      cargarReservas();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Iniciar sesión | GranReserva</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/estilos.css" />
+</head>
+<body>
+  <main class="contenedor-auth">
+    <!-- Panel decorativo: identidad de la marca -->
+    <section class="panel-salon" aria-hidden="true">
+      <div class="arcos">
+        <span class="arco arco--1"></span>
+        <span class="arco arco--2"></span>
+        <span class="arco arco--3"></span>
+        <span class="arco arco--4"></span>
+      </div>
+      <div class="panel-salon__marca">
+        <h1>GranReserva</h1>
+      </div>
+      <div class="panel-salon__mensaje">
+        <h1>El espacio perfecto para tu próximo evento, a un clic.</h1>
+        <p>Encuentra, reserva y administra salones para tus celebraciones desde un solo lugar.</p>
+      </div>
+    </section>
+
+    <!-- Panel de formulario -->
+    <section class="panel-formulario">
+      <div class="tarjeta-form">
+        <p class="tarjeta-form__eyebrow">Bienvenido de nuevo</p>
+        <h2>Inicia sesión</h2>
+        <p class="tarjeta-form__subtitulo">Accede a tu cuenta para gestionar tus reservas.</p>
+
+        <div id="mensaje-login" class="mensaje-estado" role="alert"></div>
+
+        <form id="form-login" novalidate>
+          <div class="campo">
+            <label for="correo">Correo electrónico</label>
+            <input type="email" id="correo" name="correo" autocomplete="email" required />
+            <small id="error-correo" class="campo__error"></small>
+          </div>
+
+          <div class="campo">
+            <label for="contrasena">Contraseña</label>
+            <input type="password" id="contrasena" name="contrasena" autocomplete="current-password" required />
+            <small id="error-contrasena" class="campo__error"></small>
+          </div>
+
+          <a href="recuperar.html" class="enlace-secundario enlace-olvido">¿Olvidaste tu contraseña?</a>
+
+          <button type="submit" class="boton-primario">Iniciar sesión</button>
+        </form>
+
+        <p class="tarjeta-form__pie">
+          ¿No tienes cuenta?
+          <a href="registro.html" class="enlace-secundario">Regístrate aquí</a>
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/validaciones.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/login.js"></script>
+</body>
+</html>
