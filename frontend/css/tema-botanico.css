@@ -189,3 +189,61 @@
     padding: 1rem;       /* espacio interno del recuadro */
   }
 }
+.panel-formulario {
+  background-color: #edb56d;
+}
+.panel-salon__mensaje {
+  margin-block: auto;
+}
+@media (max-width: 860px) {
+  .panel-salon {
+    padding: 28px 24px;
+    gap: 20px;
+  }
+
+  .panel-salon__marca {
+    font-size: 1.5rem;          /* logo más pequeño */
+  }
+
+  .panel-salon__mensaje {
+    margin-bottom: 0;           /* quita el hueco del escritorio */
+    max-width: 60%;             /* deja libre la derecha para las hojas */
+  }
+
+  .panel-salon__mensaje h1 {
+    font-size: 1.25rem;
+  }
+
+  .panel-salon__mensaje p {
+    font-size: 0.85rem;
+  }
+
+  .panel-salon::after {
+    width: 150px;               /* hojas más pequeñas, en la esquina */
+    opacity: 0.9;
+  }
+}
+/* Segunda hoja: esquina superior derecha del panel verde */
+.panel-salon::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: min(360px, 70%);
+  aspect-ratio: 400 / 360;
+  background: url("../img/hojas-grandes.svg") right bottom / contain no-repeat;
+  transform: scaleY(-1);   /* la voltea para que "cuelgue" desde arriba */
+  pointer-events: none;
+}
+@media (max-width: 860px) {
+  .panel-salon::before {
+    width: 110px;      /* mucho más pequeña */
+    opacity: 0.9;
+  }
+
+  .panel-salon__marca {
+    position: relative;
+    z-index: 2;        /* el logo siempre queda por encima de las hojas */
+    max-width: 65%;    /* deja libre la esquina derecha */
+  }
+}
