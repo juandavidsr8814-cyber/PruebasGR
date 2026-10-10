@@ -1,0 +1,191 @@
+/**
+ * tema-botanico.css
+ * ---------------------------------------------------------------
+ * Tema visual "botánico": verde bosque, hojas doradas y naranja,
+ * titulares en serif. Se carga DESPUÉS de estilos.css, así que no
+ * hay que tocar ese archivo: solo redefine la paleta, las fuentes
+ * y el encabezado principal (hero).
+ * ---------------------------------------------------------------
+ */
+
+@import url("https://fonts.googleapis.com/css2?family=Hind:wght@400;500;600&family=Merriweather:wght@700;900&display=swap");
+
+/* ---------- 1. Paleta y tipografía (afectan a todo el sitio) ---------- */
+:root {
+  --verde-vitral: #1e3a34;        /* verde bosque (fondo del hero y cabeceras) */
+  --verde-vitral-suave: #284a42;
+  --oro-claro: #edb36b;           /* dorado de títulos y franja */
+  --oro-antiguo: #b8691a;         /* naranja quemado: botones y acentos */
+  --ciruela: #8a3b2a;             /* errores / acciones peligrosas */
+  --piedra: #f6efe3;              /* fondo de página */
+  --marfil: #fffaf1;              /* tarjetas y formularios */
+  --tinta: #1f2a26;
+  --tinta-suave: #5d625b;
+  --borde: #e3d6bf;
+  --sombra: 0 18px 40px -14px rgba(30, 58, 52, 0.3);
+
+  --fuente-display: "Merriweather", Georgia, serif;
+  --fuente-cuerpo: "Hind", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* Merriweather es más ancha que Fraunces: se ajusta el peso de los títulos */
+.panel-heading h1,
+.publicacion-heading h1,
+.tarjeta-form h2,
+.pagina-detalle .info-detalle h2 {
+  font-weight: 700;
+}
+
+/* Texto de botones sobre naranja */
+.pagina-home .nav-links .btn-solid,
+.pagina-home .btn-search {
+  color: #fff !important;
+}
+
+/* ---------- 2. Encabezado de la página de inicio ---------- */
+.pagina-home header {
+  background: #16302a !important;
+}
+
+.pagina-home .hero {
+  position: relative;
+  overflow: hidden;
+  text-align: left;
+  padding: 5rem 0 4.5rem !important;
+  margin-bottom: 3rem !important;
+  border-bottom: 2.25rem solid var(--oro-claro);
+  background:
+    url("../img/hojas-suaves.svg") center / cover no-repeat,
+    var(--verde-vitral) !important;
+}
+
+/* Hojas grandes en la esquina derecha, apoyadas sobre la franja dorada */
+.pagina-home .hero::after {
+  content: "";
+  position: absolute;
+  right: 6%;
+  bottom: 0;
+  width: min(420px, 36vw);
+  aspect-ratio: 400 / 360;
+  background: url("../img/hojas-grandes.svg") right bottom / contain no-repeat;
+  pointer-events: none;
+}
+
+.pagina-home .hero .container {
+  position: relative;
+  z-index: 2;
+}
+
+.pagina-home .hero h1 {
+  max-width: 11em;
+  font-family: var(--fuente-display);
+  font-size: clamp(2.4rem, 5.2vw, 4.2rem);
+  font-weight: 900 !important;
+  line-height: 1.12;
+  color: var(--oro-claro) !important;
+}
+
+.pagina-home .hero p {
+  max-width: 30rem;
+  color: var(--oro-claro) !important;
+  font-size: 1.2rem;
+}
+
+.pagina-home .search-box {
+  margin: 2.25rem 0 0;
+  max-width: 640px;
+}
+
+/* ---------- 3. Paneles de login / registro / recuperar ---------- */
+.panel-salon {
+  background:
+    url("../img/hojas-suaves.svg") center / cover no-repeat,
+    var(--verde-vitral);
+}
+
+.panel-salon .arcos {
+  display: none;
+}
+
+.panel-salon::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: min(360px, 70%);
+  aspect-ratio: 400 / 360;
+  background: url("../img/hojas-grandes.svg") right bottom / contain no-repeat;
+  pointer-events: none;
+}
+
+.panel-salon__marca,
+.panel-salon__mensaje h1 {
+  color: var(--oro-claro);
+  font-family: var(--fuente-display);
+}
+
+.panel-salon__mensaje h1 {
+  font-weight: 900;
+}
+
+.panel-salon__mensaje p {
+  color: rgba(237, 179, 107, 0.85);
+}
+
+/* ---------- 4. Cabeceras de los paneles internos ---------- */
+.panel-header {
+  background: #16302a;
+  border-bottom: 4px solid var(--oro-claro);
+}
+
+/* ---------- 5. Pantallas pequeñas ---------- */
+@media (max-width: 900px) {
+  .pagina-home .hero::after {
+    width: 200px;
+    opacity: 0.55;
+  }
+
+  .pagina-home .hero {
+    padding: 3.5rem 0 3rem !important;
+  }
+}
+
+@media (max-width: 500px) {
+  .pagina-home .hero::after {
+    display: none;
+  }
+}
+
+/* Mueve el texto y el buscador del hero hacia la izquierda */
+.pagina-home .hero .container {
+  max-width: none;
+  margin: 0;
+  padding-left: 6%;   /* súbelo o bájalo para moverlo más o menos */
+}
+.pagina-home header .container {
+  max-width: none;
+  padding: 0 6%;
+}
+/* Mueve "Salones Destacados" y sus tarjetas hacia la izquierda */
+.pagina-home section.container {
+  max-width: none;
+  margin: 0;
+  padding-left: 6%;
+  padding-right: 6%;
+} 
+.pagina-home .search-box {
+  margin: 0 0 2rem;
+  max-width: 700px;
+  border: 1px solid var(--borde);
+}
+@media (max-width: 800px) {
+  .pagina-home .search-group {
+    flex: 0 0 auto;      /* quita los 160px de alto */
+    padding: 0.25rem 0.75rem;
+  }
+
+  .pagina-home .search-box {
+    gap: 0.6rem;         /* espacio entre campos */
+    padding: 1rem;       /* espacio interno del recuadro */
+  }
+}
