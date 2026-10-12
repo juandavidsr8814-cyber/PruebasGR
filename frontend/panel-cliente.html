@@ -219,7 +219,10 @@
         feedback.textContent = resultado.mensaje;
         feedback.className = `contacto-feedback visible ${resultado.ok ? 'success' : 'error'}`;
         boton.disabled = !resultado.ok;
-        if (resultado.ok) setTimeout(cerrarContacto, 900);
+        if (resultado.ok) {
+          reservasActuales = reservasActuales.map((reserva) => reserva.id === reservaContactoId ? resultado.reserva : reserva);
+          setTimeout(cerrarContacto, 900);
+        }
       });
       document.addEventListener('keydown', (evento) => { if (evento.key === 'Escape' && !contactoModal.hidden) cerrarContacto(); if (evento.key === 'Escape' && !mensajesModal.hidden) { mensajesModal.hidden = true; document.body.classList.remove('modal-abierto'); } });
 

@@ -17,7 +17,7 @@
       <nav aria-label="Navegación del anfitrión">
         <a href="home.html"><i class="fas fa-home"></i> Inicio</a>
         <a href="#salones"><i class="fas fa-building"></i> Mis salones</a>
-        <a href="#solicitudes"><i class="fas fa-inbox"></i> Solicitudes <span id="badgeSolicitudes" class="nav-badge" hidden>0</span></a>
+        <button type="button" class="panel-salir panel-mensajes-link" id="abrirMensajes"><i class="fas fa-comments"></i> Mensajes</button>
         <button type="button" class="panel-salir" id="cerrarSesion"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</button>
       </nav>
     </div>
@@ -62,6 +62,18 @@
     </div>
   </main>
 
+  <div class="contacto-modal" id="mensajesModal" hidden>
+    <div class="contacto-backdrop" data-cerrar-mensajes></div>
+    <section class="contacto-dialog mensajes-dialog" role="dialog" aria-modal="true" aria-labelledby="mensajesTitulo">
+      <button class="contacto-cerrar" type="button" aria-label="Cerrar" data-cerrar-mensajes><i class="fas fa-times"></i></button>
+      <p class="panel-eyebrow">Centro de comunicación</p>
+      <h2 id="mensajesTitulo">Mensajes</h2>
+      <p class="contacto-subtitulo">Conversaciones con los clientes de tus solicitudes.</p>
+      <div class="cliente-mensajes-toolbar"><span id="contadorMensajesAnfitrion"><i class="fas fa-comments"></i> 0 conversaciones</span><small>Responde directamente a tus clientes</small></div>
+      <div id="listaMensajesAnfitrion" class="lista-mensajes-cliente"></div>
+    </section>
+  </div>
+
   <!-- Modal de confirmación genérico (reemplaza los window.confirm/alert nativos) -->
   <div class="contacto-modal" id="confirmarModal" hidden>
     <div class="contacto-backdrop" data-cerrar-confirmar></div>
@@ -89,7 +101,9 @@
       const estadoSalones = document.getElementById('estadoSalones');
       const listaSolicitudes = document.getElementById('listaSolicitudes');
       const estadoSolicitudes = document.getElementById('estadoSolicitudes');
-      const badgeSolicitudes = document.getElementById('badgeSolicitudes');
+      const mensajesModal = document.getElementById('mensajesModal');
+      const listaMensajes = document.getElementById('listaMensajesAnfitrion');
+      let solicitudesActuales = [];
 
       // ---------- Modal de confirmación (reutilizable) ----------
       const confirmarModal = document.getElementById('confirmarModal');
@@ -178,14 +192,13 @@
       }
 
       function mostrarSolicitudes(reservas) {
+        solicitudesActuales = reservas;
         const hoy = new Date().toLocaleDateString('en-CA'); // AAAA-MM-DD en hora local
         const pendientes = reservas.filter((reserva) => reserva.estado === 'pendiente').length;
         const aceptadasHoy = reservas.filter((reserva) => reserva.estado === 'aceptada' && new Date(reserva.fecha).toISOString().slice(0, 10) === hoy).length;
         document.getElementById('solicitudesNuevas').textContent = pendientes;
         document.getElementById('reservasHoy').textContent = aceptadasHoy;
         estadoSolicitudes.textContent = `${reservas.length} solicitud${reservas.length === 1 ? '' : 'es'}`;
-        badgeSolicitudes.hidden = pendientes === 0;
-        badgeSolicitudes.textContent = pendientes;
 
         if (reservas.length === 0) {
           listaSolicitudes.innerHTML = '<div class="panel-empty"><i class="fas fa-inbox"></i><p>No hay solicitudes todavía.</p><small>Aquí aparecerán las solicitudes de los clientes.</small></div>';
@@ -212,6 +225,25 @@
         `).join('');
       }
 
+      function textoEstado(estado) {
+        return { pendiente: 'Pendiente', aceptada: 'Aceptada', rechazada: 'Rechazada' }[estado] || estado;
+      }
+
+      function mostrarListaConversacionesAnfitrion() {
+        const conversaciones = solicitudesActuales.filter((reserva) => reserva.mensajes?.length);
+        document.getElementById('contadorMensajesAnfitrion').innerHTML = `<i class="fas fa-comments"></i> ${conversaciones.length} conversación${conversaciones.length === 1 ? '' : 'es'}`;
+        listaMensajes.innerHTML = conversaciones.length ? conversaciones.map((reserva) => {
+          const ultimoMensaje = reserva.mensajes[reserva.mensajes.length - 1];
+          return `<button class="conversacion-item" type="button" data-seleccionar-conversacion-anfitrion="${esc(reserva.id)}"><span class="conversacion-avatar"><i class="fas fa-user"></i></span><span class="conversacion-resumen"><strong>${esc(reserva.nombreCliente || 'Cliente')}</strong><small>${esc(reserva.nombreSalon || 'Salón')} · ${formatearFecha(reserva.fecha)}</small><span>${esc(ultimoMensaje?.texto || 'Sin mensajes')}</span></span><span class="conversacion-meta"><b>${reserva.mensajes.length}</b><i class="fas fa-chevron-right"></i></span></button>`;
+        }).join('') : '<div class="panel-empty modal-empty"><i class="fas fa-comments"></i><p>Aún no tienes mensajes.</p><small>Los mensajes de tus clientes aparecerán aquí.</small></div>';
+      }
+
+      function mostrarConversacionAnfitrion(id) {
+        const reserva = solicitudesActuales.find((item) => String(item.id) === String(id));
+        if (!reserva) return;
+        listaMensajes.innerHTML = `<button class="conversacion-volver" type="button" data-volver-conversaciones-anfitrion><i class="fas fa-arrow-left"></i> Todas las conversaciones</button><article class="cliente-conversacion mensaje-conversacion-activa"><div class="cliente-conversacion-header"><div><strong>${esc(reserva.nombreCliente || 'Cliente')}</strong><span>${esc(reserva.nombreSalon || 'Salón')} · ${formatearFecha(reserva.fecha)}</span></div><span class="request-status ${esc(reserva.estado)}">${esc(textoEstado(reserva.estado))}</span></div><div class="cliente-mensajes-historial">${reserva.mensajes.map((mensaje) => `<p class="mensaje-burbuja ${String(mensaje.autor) === String(usuario.id) ? 'mensaje-propio' : ''}"><strong>${esc(mensaje.nombreAutor || (String(mensaje.autor) === String(usuario.id) ? 'Tú' : 'Cliente'))}:</strong> ${esc(mensaje.texto)}<small>${new Date(mensaje.creadoEn).toLocaleString('es-CO')}</small></p>`).join('')}</div><form class="mensaje-respuesta" data-responder-reserva-anfitrion="${esc(reserva.id)}"><input type="text" maxlength="500" required placeholder="Escribe una respuesta..."><button type="submit" aria-label="Enviar respuesta"><i class="fas fa-paper-plane"></i></button></form></article>`;
+      }
+
       async function cargarSolicitudes() {
         estadoSolicitudes.textContent = 'Cargando...';
         const resultado = await Auth.listarReservasAnfitrion();
@@ -222,7 +254,46 @@
           return;
         }
         mostrarSolicitudes(resultado.reservas);
+        if (!mensajesModal.hidden) mostrarListaConversacionesAnfitrion();
       }
+
+      document.getElementById('abrirMensajes').addEventListener('click', () => {
+        mostrarListaConversacionesAnfitrion();
+        mensajesModal.hidden = false;
+        document.body.classList.add('modal-abierto');
+        mensajesModal.querySelector('[data-cerrar-mensajes]').focus();
+      });
+      mensajesModal.querySelectorAll('[data-cerrar-mensajes]').forEach((elemento) => elemento.addEventListener('click', () => {
+        mensajesModal.hidden = true;
+        document.body.classList.remove('modal-abierto');
+      }));
+      mensajesModal.addEventListener('click', (evento) => {
+        const conversacion = evento.target.closest('[data-seleccionar-conversacion-anfitrion]');
+        if (conversacion) mostrarConversacionAnfitrion(conversacion.dataset.seleccionarConversacionAnfitrion);
+        if (evento.target.closest('[data-volver-conversaciones-anfitrion]')) mostrarListaConversacionesAnfitrion();
+      });
+      mensajesModal.addEventListener('submit', async (evento) => {
+        const formulario = evento.target.closest('[data-responder-reserva-anfitrion]');
+        if (!formulario) return;
+        evento.preventDefault();
+        const boton = formulario.querySelector('button');
+        const entrada = formulario.querySelector('input');
+        boton.disabled = true;
+        const resultado = await Auth.agregarMensajeReserva(formulario.dataset.responderReservaAnfitrion, entrada.value);
+        if (resultado.ok) {
+          solicitudesActuales = solicitudesActuales.map((reserva) => String(reserva.id) === String(formulario.dataset.responderReservaAnfitrion) ? resultado.reserva : reserva);
+          mostrarConversacionAnfitrion(formulario.dataset.responderReservaAnfitrion);
+        } else {
+          if (resultado.tipo !== 'sesion') window.alert(resultado.mensaje);
+          boton.disabled = false;
+        }
+      });
+      document.addEventListener('keydown', (evento) => {
+        if (evento.key === 'Escape' && !mensajesModal.hidden) {
+          mensajesModal.hidden = true;
+          document.body.classList.remove('modal-abierto');
+        }
+      });
 
       listaSolicitudes.addEventListener('click', async (evento) => {
         const reintentar = evento.target.closest('[data-reintentar="solicitudes"]');

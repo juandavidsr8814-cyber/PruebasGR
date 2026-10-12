@@ -145,7 +145,7 @@ frontend/
 ├── recuperar.html           Recuperar contraseña
 ├── detalle-salon.html       Detalle del salón y solicitud de reserva
 ├── panel-cliente.html       Mis reservas y mensajes (cliente)
-├── panel-anfitrion.html     Mis salones y solicitudes (anfitrión)
+├── panel-anfitrion.html     Mis salones, solicitudes y mensajes (anfitrión)
 ├── crear-salon.html         Crear / editar publicación (anfitrión)
 ├── css/
 │   └── estilos.css          Hoja de estilos única
