@@ -1,0 +1,261 @@
+/**
+ * detalle.css
+ * ---------------------------------------------------------------
+ * Rediseño de la página detalle-salon.html.
+ * Se carga DESPUÉS de estilos.css y tema-botanico.css (ya está así
+ * en el <head>), por eso sobrescribe el bloque ".pagina-detalle" de
+ * estilos.css sin tener que editarlo. Usa las variables de color y
+ * las fuentes del tema botánico.
+ *
+ * Idea del diseño:
+ *   - Una cabecera con fondo de hojas (migas de pan + galería).
+ *   - La tarjeta de reserva sube y se SUPERPONE al borde de esa cabecera.
+ *   - Debajo, sobre fondo claro, la información del salón.
+ * El modal de reserva NO se toca (sigue con los estilos de estilos.css).
+ * ---------------------------------------------------------------
+ */
+
+/* ---------- 1. Cabecera con fondo de hojas ---------- */
+.pagina-detalle .detalle-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 22px 0 130px;               /* el espacio de abajo es donde se monta la tarjeta */
+  background: var(--verde-vitral) url("../img/fondo-hojas.svg") center top / cover no-repeat;
+  border-bottom: 4px solid var(--oro-claro);
+}
+
+.pagina-detalle .detalle-hero .breadcrumb {
+  margin-bottom: 22px;
+  border-color: transparent;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+}
+
+/* ---------- 2. Galería: foto grande + 4 miniaturas (2 x 2) ---------- */
+.pagina-detalle .salon-header {
+  grid-template-columns: 1fr 380px;     /* 2 miniaturas de 182px + 16px de espacio */
+  gap: 16px;
+  margin: 0;
+}
+
+.pagina-detalle .foto-principal {
+  min-height: 388px;                    /* 186 + 16 + 186: alinea con las miniaturas */
+  border-radius: 10px;
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.4);
+}
+
+.pagina-detalle .galeria-mini {
+  grid-template-rows: repeat(2, 186px);
+  gap: 16px;
+}
+
+.pagina-detalle .galeria-mini .mini {
+  min-height: 0;
+  border: 0;
+  border-radius: 10px;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.32);
+}
+
+/* ---------- 3. Cuerpo: información + tarjeta superpuesta ---------- */
+.pagina-detalle .info-grid {
+  grid-template-columns: 1fr 360px;
+  gap: 36px;
+  align-items: start;
+  margin: 0 0 20px;
+}
+
+.pagina-detalle .info-detalle {
+  padding-top: 34px;
+  min-width: 0;
+}
+
+.pagina-detalle .info-detalle h2 {
+  margin: 0 0 6px;
+  font-size: 2.1rem;
+  line-height: 1.2;
+}
+
+.pagina-detalle .ubicacion {
+  margin-bottom: 18px;
+  font-size: 1.05rem;
+}
+
+/* Datos rápidos: dos cajitas en vez de una barra */
+.pagina-detalle .datos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.pagina-detalle .datos div {
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  background: var(--marfil);
+}
+
+.pagina-detalle .datos i {
+  color: var(--oro-antiguo);
+}
+
+/* Títulos de sección con línea dorada */
+.pagina-detalle .info-detalle h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 30px 0 12px;
+  color: var(--verde-vitral);
+  font: 700 1.15rem var(--fuente-display);
+}
+
+.pagina-detalle .info-detalle h3::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--oro-antiguo), transparent);
+}
+
+.pagina-detalle .info-detalle h3 i {
+  color: var(--oro-antiguo);
+}
+
+.pagina-detalle .descripcion-salon {
+  max-width: 68ch;
+  margin: 0;
+  color: #3a4742;
+  font-size: 1.02rem;
+  line-height: 1.7;
+}
+
+.pagina-detalle .extras {
+  margin-top: 0;
+}
+
+.pagina-detalle .extras ul {
+  gap: 10px;
+}
+
+.pagina-detalle .extras li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  background: var(--marfil);
+  font-size: 0.93rem;
+}
+
+.pagina-detalle .extras li i {
+  color: var(--oro-antiguo);
+}
+
+/* ---------- 4. Tarjeta de reserva superpuesta ---------- */
+.pagina-detalle .reserva-box {
+  position: sticky;
+  top: 20px;
+  z-index: 2;
+  margin-top: -100px;                   /* sube y se monta sobre la cabecera */
+  padding: 26px 24px 24px;
+  border: 1px solid var(--borde);
+  border-top: 4px solid var(--oro-claro);
+  border-radius: 14px;
+  background: var(--marfil);
+  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.28);
+}
+
+.pagina-detalle .precio {
+  margin-bottom: 14px;
+  font-family: var(--fuente-display);
+  font-size: 2rem;
+  line-height: 1.15;
+}
+
+.pagina-detalle .reserva-box .capacidad,
+.pagina-detalle .disponibilidad-salon {
+  padding: 11px 0;
+  border-top: 1px solid var(--borde);
+  color: var(--tinta-suave);
+  font-size: 0.95rem;
+}
+
+.pagina-detalle .reserva-box .capacidad i {
+  margin-right: 6px;
+  color: var(--oro-antiguo);
+}
+
+.pagina-detalle .btn-reservar {
+  margin-top: 14px;
+  box-shadow: 0 8px 18px rgba(30, 58, 52, 0.35);
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.pagina-detalle .btn-reservar:hover {
+  transform: translateY(-1px);
+}
+
+/* ---------- 5. Reseñas ---------- */
+.pagina-detalle .reseñas {
+  margin: 36px 0 44px;
+}
+
+.pagina-detalle .reseñas-vacias {
+  border-radius: 10px;
+}
+
+/* ---------- 6. Tablet y celular ---------- */
+@media (max-width: 900px) {
+  .pagina-detalle .detalle-hero {
+    padding-bottom: 110px;
+  }
+
+  .pagina-detalle .salon-header {
+    grid-template-columns: 1fr;
+  }
+
+  .pagina-detalle .foto-principal {
+    min-height: 260px;
+  }
+
+  .pagina-detalle .galeria-mini {
+    grid-template-rows: none;
+    grid-auto-rows: 130px;
+  }
+
+  .pagina-detalle .info-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  /* La tarjeta pasa primero, justo debajo de la cabecera, y se sigue superponiendo */
+  .pagina-detalle .reserva-box {
+    position: static;
+    order: -1;
+    margin-top: -90px;
+  }
+
+  .pagina-detalle .info-detalle {
+    padding-top: 28px;
+  }
+}
+
+@media (max-width: 600px) {
+  .pagina-detalle .galeria-mini {
+    grid-auto-rows: 110px;
+  }
+
+  .pagina-detalle .info-detalle h2 {
+    font-size: 1.7rem;
+  }
+
+  .pagina-detalle .precio {
+    font-size: 1.7rem;
+  }
+}

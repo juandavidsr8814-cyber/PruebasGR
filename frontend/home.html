@@ -50,11 +50,9 @@
                     <i class="fas fa-users"></i>
                     <select id="capacitySelect">
                         <option value="">Capacidad</option>
-                        <option value="10">Hasta 10</option>
-                        <option value="30">Hasta 30</option>
-                        <option value="50">Hasta 50</option>
-                        <option value="100">Hasta 100</option>
-                        <option value="200">200+</option>
+                        <option value="10">10+</option>
+                        <option value="50">50+</option>
+                        <option value="100">100+</option>
                     </select>
                 </div>
                 <div class="search-group">
@@ -88,6 +86,11 @@
     <script>
         (function() {
             'use strict';
+
+            // Elementos del buscador: se declaran ANTES de cualquier función que los use
+            const searchBtn = document.getElementById('searchBtn');
+            const capacitySelect = document.getElementById('capacitySelect');
+            const locationInput = document.getElementById('locationInput');
 
             const usuario = Auth.obtenerUsuarioActual();
             const enlaceAnfitrion = document.getElementById('enlace-anfitrion');
@@ -159,71 +162,49 @@
                         window.location.href = `detalle-salon.html?id=${encodeURIComponent(card.dataset.salonId)}`;
                     });
                 });
+
+                // Ya hay tarjetas en pantalla: se aplican los filtros que el usuario tenga puestos
+                filterSalones();
+            }
+            // ----- Función de filtrado -----
+            function normalizar(texto) {
+                return String(texto || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
             }
 
-            cargarSalonesPublicados();
-
-            // Elementos del DOM
-            const searchBtn = document.getElementById('searchBtn');
-            const capacitySelect = document.getElementById('capacitySelect');
-            const locationInput = document.getElementById('locationInput');
-
-            // ----- Función de filtrado -----
             function filterSalones() {
                 const capacityValue = capacitySelect.value;
-                const locationValue = locationInput.value.trim().toLowerCase();
+                const locationValue = normalizar(locationInput.value.trim());
                 const cards = document.querySelectorAll('#cardsGrid .card');
 
-                cards.forEach(card => {
-                    const cardCapacity = card.getAttribute('data-capacity');
-                    const cardLocation = card.getAttribute('data-location').toLowerCase();
+                document.getElementById('noResultsMsg')?.remove();
+                if (cards.length === 0) return; // cargando o con error: no hay nada que filtrar
 
+                cards.forEach(card => {
                     let show = true;
 
-                    // Filtro por capacidad (si se seleccionó algo)
+                    // Cada opción representa un rango de capacidad.
                     if (capacityValue !== '') {
-                        const selectedNum = parseInt(capacityValue, 10);
-                        const cardNum = parseInt(cardCapacity, 10);
-
-                        if (selectedNum >= 200) {
-                            // Opción "200+": mostramos salones con capacidad igual o mayor a 200
-                            if (cardNum < 200) {
-                                show = false;
-                            }
-                        } else {
-                            // Opción "Hasta X": mostramos salones con capacidad igual o menor a X
-                            if (cardNum > selectedNum) {
-                                show = false;
-                            }
-                        }
+                        const capacity = parseInt(card.dataset.capacity, 10);
+                        const minimum = parseInt(capacityValue, 10);
+                        const maximum = minimum === 10 ? 50 : minimum === 50 ? 100 : Infinity;
+                        show = capacity >= minimum && capacity < maximum;
                     }
 
-                    // Filtro por ubicación (si se escribió algo)
-                    if (locationValue !== '') {
-                        if (!cardLocation.includes(locationValue)) {
-                            show = false;
-                        }
+                    // Ubicación, sin importar mayúsculas ni tildes
+                    if (show && locationValue !== '') {
+                        show = normalizar(card.dataset.location).includes(locationValue);
                     }
 
-                    card.style.display = show ? 'block' : 'none';
+                    card.style.display = show ? '' : 'none';
                 });
 
-                // Mostrar mensaje si no hay resultados
-                const visibleCards = Array.from(cards).filter(card => card.style.display !== 'none');
-                let msg = document.getElementById('noResultsMsg');
-                if (visibleCards.length === 0) {
-                    if (!msg) {
-                        msg = document.createElement('p');
-                        msg.id = 'noResultsMsg';
-                        msg.style.textAlign = 'center';
-                        msg.style.padding = '40px 0';
-                        msg.style.fontSize = '1.1rem';
-                        msg.style.color = '#64748b';
-                        msg.innerHTML = '<i class="fas fa-exclamation-circle"></i> No se encontraron salones con esos filtros.';
-                        document.getElementById('cardsGrid').parentNode.appendChild(msg);
-                    }
-                } else {
-                    if (msg) msg.remove();
+                const hayVisibles = Array.from(cards).some(card => card.style.display !== 'none');
+                if (!hayVisibles) {
+                    const msg = document.createElement('p');
+                    msg.id = 'noResultsMsg';
+                    msg.className = 'cards-mensaje';
+                    msg.innerHTML = '<i class="fas fa-exclamation-circle"></i> No se encontraron salones con esos filtros.';
+                    document.getElementById('cardsGrid').appendChild(msg);
                 }
             }
 
@@ -235,6 +216,9 @@
             // Permitir búsqueda con Enter en los campos
             capacitySelect.addEventListener('keydown', (e) => { if (e.key === 'Enter') filterSalones(); });
             locationInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') filterSalones(); });
+
+            // Carga inicial: se hace al final, cuando todo lo anterior ya está definido
+            cargarSalonesPublicados();
 
         })();
     </script>

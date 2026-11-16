@@ -1,17 +1,3 @@
-/**
- * validaciones.js
- * ---------------------------------------------------------------
- * Módulo de validaciones reutilizable para los formularios de
- * autenticación (login, registro y recuperación de contraseña)
- * de la plataforma de reservas de salones.
- *
- * Evidencia: GA7-220501096-AA4-EV03
- *
- * No depende de ningún framework: se apoya en el DOM estándar.
- * Cada función de validación retorna un objeto { valido, mensaje }
- * para que el formulario que la use decida cómo mostrar el error.
- * ---------------------------------------------------------------
- */
 
 // Expresión regular básica para validar formato de correo electrónico.
 const REGEX_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

@@ -7,11 +7,14 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
   <link rel="stylesheet" href="css/estilos.css" />
   <link rel="stylesheet" href="css/tema-botanico.css" />
+  <link rel="stylesheet" href="css/detalle.css">
  
 </head>
 <body class="pagina-detalle">
   
 
+<!-- ========== CABECERA CON FONDO (breadcrumb + galería) ========== -->
+<header class="detalle-hero">
 <div class="container">
   <!-- ========== BREADCRUMB ========== -->
   <nav class="breadcrumb">
@@ -34,7 +37,10 @@
       <div class="mini"></div>
     </div>
   </section>
+</div>
+</header>
 
+<div class="container">
   <!-- ========== INFORMACIÓN Y RESERVA ========== -->
   <div class="info-grid">
     <div class="info-detalle">
@@ -47,6 +53,7 @@
         <div><i class="fas fa-clock"></i> Alquiler mínimo: <span id="tiempoMinimo">4 horas</span></div>
       </div>
 
+      <h3><i class="fas fa-align-left"></i> Descripción</h3>
       <p class="descripcion-salon" id="descripcionSalon"></p>
 
       <div class="extras">

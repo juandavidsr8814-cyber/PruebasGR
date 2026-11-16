@@ -18,7 +18,13 @@
  */
 
 const CLAVE_SESION = "reservas_salones_sesion";
-const URL_BACKEND = "https://pruebasgr.onrender.com/api";
+// Detecta el entorno automáticamente: si la página se abre desde tu
+// computador (Live Server) usa el backend local; si se abre desde
+// Netlify (o cualquier otro dominio) usa el backend publicado en Render.
+const ES_LOCAL = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+const URL_BACKEND = ES_LOCAL
+  ? "http://localhost:4000/api"
+  : "https://pruebasgr.onrender.com/api";
 const CLAVE_MENSAJE_SESION = "reservas_salones_mensaje_sesion";
 
 /**
